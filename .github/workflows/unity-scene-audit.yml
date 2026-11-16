@@ -71,12 +71,24 @@ jobs:
 
       - name: Install pinned UnityPy parser
         run: |
-          python -m pip install --disable-pip-version-check "UnityPy==1.25.4"
+          python -m pip install --disable-pip-version-check "UnityPy[ttgen]==1.25.4"
 
       - name: Extract scene MonoBehaviour inventory without stripped custom TypeTrees
         run: |
           python tools/UnitySceneAudit/extract_scene_scripts_unitypy.py \
             "$DATA_DIR" "$GITHUB_WORKSPACE/scene-audit-output"
+
+      - name: Decode active DiscordRPC component configuration
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/managed"
+          unzip -q Managed.zip -d "$RUNNER_TEMP/managed"
+          ASSEMBLY="$(find "$RUNNER_TEMP/managed" -type f -name Assembly-CSharp.dll -print -quit)"
+          test -n "$ASSEMBLY"
+          python tools/UnitySceneAudit/decode_discord_component.py \
+            "$DATA_DIR" Managed.zip "$GITHUB_WORKSPACE/scene-audit-output/discord-component-config.json"
 
       - name: Upload scene inventory (no asset payloads)
         uses: actions/upload-artifact@v4
