@@ -50,7 +50,7 @@ This is stronger evidence than the earlier managed-reference-only result:
 - The `Discord.Discord` constructor calls the imported `DiscordCreate` method from `discord_game_sdk`.
 - The earlier archive cross-check did not find `discord_game_sdk.dll` in the supplied ZIP set.
 
-**Interpretation:** if the serialized component's startup guard permits initialization, loading `level0` can reach the missing Discord Game SDK native boundary. This is a plausible first-scene blocker for RamenUnity, not yet a proven crash: the actual serialized Discord application ID/settings have not been decoded, and the missing DLL could exist in an archive that was not supplied. The next step is to inspect the `DiscordRPC` component's serialized fields and confirm the exact branch taken by `Start()`.
+**Serialized component configuration was subsequently decoded.** The active component has a non-empty numeric `_applicationID`, `_updateRichPresence = 1`, and `_updateRate = 10.0`. Its GameObject is active and the component is enabled. The managed IL inventory shows `DiscordRPC.Start()` performs a string inequality check, parses a 64-bit application ID, then constructs `Discord.Discord`; the constructor reaches the imported `DiscordCreate` entry point. Together these observations make the Game SDK path a **high-confidence first-scene compatibility risk**, not merely a dormant assembly reference. A focused IL dump is being used to verify the exact conditional operand. The missing `discord_game_sdk.dll` finding remains limited to the supplied archive set, so the complete original player package could still contain it elsewhere.
 
 The older `DiscordController` / `DiscordRpc` P/Invoke path and `RichPresenceHelper` are not listed as components in `level0` or `level1`. Do not conflate those legacy wrappers with the active `DiscordRPC` Game SDK component.
 
@@ -100,9 +100,9 @@ The workflow and scanner do not modify game files. The generated artifact contai
 
 ## Next steps
 
-1. Decode only the serialized fields of the active `level0/Discord/DiscordRPC` component (especially the application ID/configuration) using a validated custom MonoBehaviour TypeTree.
-2. Compare the `DiscordRPC.Start()` IL guard with those serialized values to decide whether `DiscordCreate` is actually reached.
-3. Plan a minimal, explicit Android compatibility response for Discord Game SDK (e.g. optional unsupported feature with a clean no-op path); do not silently claim Discord support.
+1. Finish validating the exact `DiscordRPC.Start()` branch operand against the decoded non-empty application ID and enabled rich-presence flag.
+2. Check whether the complete original game package contains `discord_game_sdk.dll`; the current archive set is incomplete.
+3. Plan an explicit Android compatibility response for Discord Game SDK (e.g. optional unsupported feature with a clean no-op path); do not silently claim Discord support.
 4. Implement/test the Unity Input System calls used by the active `GamepadSwitcherScript`, `InputManagerScript` and `InputDeviceScript`.
 5. Obtain a complete Player Data archive before concluding that later scenes do not contain additional dependencies.
 6. Revisit XInput and Selenium when later scene inventories are available.
