@@ -80,7 +80,26 @@ For each call site, capture:
 
 The report should include the tool version, input file hashes, decode failures and unresolved references so another person can reproduce it.
 
-## Current blocker and honest status
+## Implemented scanner and CI execution (2026-11-17)
+
+A first implementation has now been added to the repository:
+
+- Scanner project: `tools/ManagedCallAudit/ManagedCallAudit.csproj`
+- Scanner source: `tools/ManagedCallAudit/Program.cs`
+- Workflow: `.github/workflows/managed-call-audit.yml`
+
+The scanner uses Mono.Cecil 0.11.6 and reads the method bodies of `Assembly-CSharp.dll`, `Assembly-CSharp-firstpass.dll` and `XInputDotNetPure.dll`. It inventories `call`, `callvirt`, `newobj`, `jmp`, `ldftn` and `ldvirtftn` instructions, writing a complete call-site CSV and a filtered CSV for Discord, XInput, Selenium/WebDriver, Firefox and AMD/NVIDIA native boundaries. It does not attempt to infer startup reachability.
+
+The workflow extracts `Managed.zip` on a GitHub-hosted runner, runs the scanner and uploads only the CSV/summary report as a short-lived Actions artifact. It does not upload decompiled source code.
+
+Execution status at the time of this update:
+
+- Run `43979007593` failed because the shell path-discovery command accidentally appended a literal newline escape to the extracted directory name. The ZIP download, extraction and DLL discovery steps succeeded.
+- The workflow path handling was corrected to use `find -print -quit` plus `dirname`.
+- Corrected run `43979084371` has started; its extraction step completed and the scanner step is still running. A successful report is **not yet confirmed**.
+- The initial run exposed an environment/automation issue, not a game compatibility result. No conclusions about the game's call paths should be drawn until the report artifact exists and has been inspected.
+
+## Remaining limits
 
 The previous metadata parser and uploaded ZIPs were available in the earlier analysis workspace, but they are not present in the current execution workspace. The repository contains the audit report and archive inventory; the binary ZIP contents cannot be treated as freshly re-read in this step. Therefore **no new IL body scan, decompilation, call-site list or startup call graph is claimed here**.
 
