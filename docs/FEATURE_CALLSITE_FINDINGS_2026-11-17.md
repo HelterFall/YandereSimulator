@@ -92,6 +92,12 @@ This feature has an obvious Windows desktop dependency chain (Firefox/GeckoDrive
 
 The game-owned `GamepadSwitcherScript.Start/Update` methods query `UnityEngine.InputSystem.Gamepad.current` and legacy `Input.GetJoystickNames`. The class also contains `UseAndroidInputs`, but the method body observed by this scanner only logs a message; it is not evidence of a complete Android mapping implementation. Other game scripts query `Gamepad.current` and use `SetMotorSpeeds`. This is a better starting point for native Android controller input/haptics than attempting to load the Windows XInput DLL, but it still requires Unity API implementation in RamenUnity.
 
+## Scene inventory cross-check (2026-11-17)
+
+The follow-up scene audit found an active, enabled `DiscordRPC` component on the active GameObject `Discord` in `level0`. The managed call-site scan shows `DiscordRPC.Start()` constructs `Discord.Discord`, calls `UpdateActivity()`, and starts its rich-presence coroutine; the Discord constructor calls `DiscordCreate` from the `discord_game_sdk` import. This makes the Game SDK boundary a concrete first-scene risk, not just an assembly reference. It is still conditional: the serialized application ID/configuration field has not yet been decoded, and the absent DLL finding is limited to the supplied archive set. The older `DiscordController`/`DiscordRpc` wrapper and `RichPresenceHelper` were not found as components in `level0` or `level1`.
+
+The same scene audit found active `GamepadSwitcherScript`, `InputManagerScript` and `InputDeviceScript` components in `level0`; it found no `YouTubeChat` or `HNS.Rumble` component in either `level0` or `level1`. The inactive `ControllerTestScript` is attached to an inactive `ControllerTestPanel` GameObject. Full details: [Scene component audit](SCENE_COMPONENT_AUDIT_2026-11-17.md).
+
 ## What this changes for RamenUnity
 
 - Prioritize an Android controller abstraction that implements the Input System gamepad calls used by the game.
