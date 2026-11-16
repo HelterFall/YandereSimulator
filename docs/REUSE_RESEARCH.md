@@ -109,6 +109,10 @@ Key findings: `Assembly-CSharp.dll` has 37 direct assembly references, all match
 
 Full tables and limitations: [Managed assembly dependency audit](ASSEMBLY_DEPENDENCY_AUDIT_2026-11-17.md).
 
+## IL method-body analysis follow-up
+
+The metadata-only audit is not enough to decide whether optional native integrations are reached during startup. The next step is to inspect CIL method bodies and call sites. The current tooling comparison and reproducible workflow are recorded in [IL method-body analysis tooling](IL_ANALYSIS_TOOLING_2026-11-17.md). This is a research plan only; no method-body scan or call graph has yet been run.
+
 ## What this means for this Yandere Simulator snapshot
 
 The God report (generated 2026-11-15) records:
