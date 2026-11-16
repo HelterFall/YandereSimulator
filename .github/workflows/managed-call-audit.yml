@@ -1,0 +1,48 @@
+name: Managed CIL call-site audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/managed-call-audit.yml"
+      - "tools/ManagedCallAudit/**"
+      - "Managed.zip"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Extract managed assemblies
+        shell: bash
+        run: |
+          test -f Managed.zip
+          mkdir -p managed-extract
+          unzip -q Managed.zip -d managed-extract
+          MANAGED_DIR="$(find managed-extract -type f -name 'Assembly-CSharp.dll' -printf '%h\\n' | head -n 1)"
+          test -n "$MANAGED_DIR"
+          echo "MANAGED_DIR=$MANAGED_DIR" >> "$GITHUB_ENV"
+          echo "Found game assemblies in: $MANAGED_DIR"
+
+      - name: Build and run read-only call-site scanner
+        run: dotnet run --project tools/ManagedCallAudit/ManagedCallAudit.csproj --configuration Release -- "$MANAGED_DIR" "$GITHUB_WORKSPACE/audit-output"
+
+      - name: Upload report only (no decompiled game source)
+        uses: actions/upload-artifact@v4
+        with:
+          name: managed-cil-call-audit
+          path: audit-output/
+          if-no-files-found: error
+          retention-days: 14
