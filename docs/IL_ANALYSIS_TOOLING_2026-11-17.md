@@ -2,7 +2,7 @@
 
 **Target:** Yandere Simulator, Unity `6000.2.8f1`, Mono-managed assemblies  
 **Purpose:** choose a reliable way to inspect method bodies and trace feature call sites after the metadata-only audit.  
-**Status:** tool research and workflow design only. No method-body call graph has been produced yet.
+**Status:** the repository's existing GitHub Actions + Mono.Cecil scanner has successfully completed a static call-site inventory. It does not yet produce a whole-program call graph or scene-root reachability proof.
 
 ## Why this is the next step
 
