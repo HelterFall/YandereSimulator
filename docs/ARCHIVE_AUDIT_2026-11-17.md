@@ -39,7 +39,7 @@ The literal version string `6000.2.8f1` was found in four supplied SerializedFil
 - `level0`
 - `level1`
 
-The supplied `ScriptingAssemblies.json` has **120 assembly names** and 120 matching type entries. The supplied `RuntimeInitializeOnLoads.json` has **25 startup initialization records**. This is useful for building an initial assembly-load and startup-callback inventory, but it does not by itself reveal all runtime dependencies.
+The supplied `ScriptingAssemblies.json` has **120 assembly names** and 120 matching type entries. All 120 names have a matching DLL in `Managed.zip`. The archive contains 143 DLLs total; the remaining 23 are framework/base-class-library assemblies such as `mscorlib.dll`, `System.dll`, `System.Core.dll`, `System.Xml.dll`, `netstandard.dll`, and related libraries, which are not listed in this player scripting manifest. The supplied `RuntimeInitializeOnLoads.json` has **25 startup initialization records** across **11 distinct assemblies**. This gives us a useful first assembly-load/startup-callback inventory, but it does not by itself reveal all runtime dependencies.
 
 ## Managed assemblies versus native runtime
 
