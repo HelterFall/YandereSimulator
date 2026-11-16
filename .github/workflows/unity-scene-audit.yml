@@ -1,0 +1,84 @@
+name: Unity scene script inventory
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/unity-scene-audit.yml"
+      - "tools/UnitySceneAudit/**"
+      - "YandereSimulator_Data.zip"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-scenes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download pinned UnityDataTool 2.4.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 \
+            https://github.com/Unity-Technologies/UnityDataTools/releases/download/v2.4.0/UnityDataTool-linux-x64.zip \
+            -o "$RUNNER_TEMP/UnityDataTool-linux-x64.zip"
+          echo "0534036123353a2b69a93e7da9658f319e4056d9cb6ec45926d5449ab65bf22f  $RUNNER_TEMP/UnityDataTool-linux-x64.zip" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/unitydatatool"
+          unzip -q "$RUNNER_TEMP/UnityDataTool-linux-x64.zip" -d "$RUNNER_TEMP/unitydatatool"
+          TOOL="$(find "$RUNNER_TEMP/unitydatatool" -type f -name UnityDataTool -print -quit)"
+          test -n "$TOOL"
+          chmod +x "$TOOL"
+          echo "UNITY_DATA_TOOL=$TOOL" >> "$GITHUB_ENV"
+          "$TOOL" --help | head -40
+
+      - name: Extract supplied Player Data archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f YandereSimulator_Data.zip
+          mkdir -p "$RUNNER_TEMP/yandere-data"
+          unzip -q YandereSimulator_Data.zip -d "$RUNNER_TEMP/yandere-data"
+          LEVEL0="$(find "$RUNNER_TEMP/yandere-data" -type f -name level0 -print -quit)"
+          test -n "$LEVEL0"
+          DATA_DIR="$(dirname "$LEVEL0")"
+          echo "DATA_DIR=$DATA_DIR" >> "$GITHUB_ENV"
+          echo "Found level0 in $DATA_DIR"
+          find "$DATA_DIR" -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
+
+      - name: Inspect SerializedFile headers and metadata
+        shell: bash
+        run: |
+          set -u
+          mkdir -p scene-audit-output/metadata
+          for FILE in level0 level1 globalgamemanagers globalgamemanagers.assets; do
+            if test -f "$DATA_DIR/$FILE"; then
+              "$UNITY_DATA_TOOL" sf header "$DATA_DIR/$FILE" --format json \
+                > "scene-audit-output/metadata/$FILE.header.json" 2> "scene-audit-output/metadata/$FILE.header.err" || true
+              "$UNITY_DATA_TOOL" sf metadata "$DATA_DIR/$FILE" --format json \
+                > "scene-audit-output/metadata/$FILE.metadata.json" 2> "scene-audit-output/metadata/$FILE.metadata.err" || true
+            fi
+          done
+
+      - name: Analyze available Player Data files (keep object references)
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$UNITY_DATA_TOOL" analyze "$DATA_DIR" -o "$RUNNER_TEMP/yandere-player-data.db" --skip-crc -v
+
+      - name: Extract scene MonoBehaviour inventory
+        run: |
+          python3 tools/UnitySceneAudit/extract_scene_scripts.py \
+            "$RUNNER_TEMP/yandere-player-data.db" "$GITHUB_WORKSPACE/scene-audit-output"
+
+      - name: Upload scene inventory (no asset payloads)
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-scene-script-inventory
+          path: scene-audit-output/
+          if-no-files-found: error
+          retention-days: 14
