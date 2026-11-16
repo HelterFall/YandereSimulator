@@ -79,7 +79,7 @@ foreach (var file in Directory.EnumerateFiles(input, "*.dll", SearchOption.AllDi
                     var operandText = instruction.Operand switch
                     {
                         null => "",
-                        string s => $"\\"{s}\\"",
+                        string s => "\"" + s + "\"",
                         MethodReference mr => mr.FullName,
                         FieldReference fr => fr.FullName,
                         Instruction targetInstruction => $"IL_{targetInstruction.Offset:X4}",
