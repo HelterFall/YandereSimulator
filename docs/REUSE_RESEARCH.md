@@ -101,6 +101,14 @@ The quickest useful milestone is a small Android ARM64 proof-of-concept that loa
 
 ---
 
+## Managed assembly audit update (2026-11-17)
+
+A read-only PE/CLI metadata-table audit has now been completed for all 143 DLLs in the supplied `Managed.zip`. It extracted direct AssemblyRef, TypeRef, MemberRef, ModuleRef and P/Invoke (ImplMap) metadata; no metadata parse errors occurred. This was a custom parser, not Mono.Cecil, and it did not decompile method bodies or build a call graph.
+
+Key findings: `Assembly-CSharp.dll` has 37 direct assembly references, all matched in `Managed.zip`, and no P/Invoke declarations. `Assembly-CSharp-firstpass.dll` has 18 direct references (all matched) and eight Discord native imports. `XInputDotNetPure.dll` imports `XInputInterface`; Unity AMD/NVIDIA modules import `AMDUnityPlugin` / `NVUnityPlugin`. The two vendor plug-ins and `discord_game_sdk.dll` were not found in the supplied archives; `XInputInterface.dll` and `discord-rpc.dll` were found as Windows x86-64 binaries. The game assembly also directly references Selenium/WebDriver types. These are declarations and references, not proof that each feature is called during startup.
+
+Full tables and limitations: [Managed assembly dependency audit](ASSEMBLY_DEPENDENCY_AUDIT_2026-11-17.md).
+
 ## What this means for this Yandere Simulator snapshot
 
 The God report (generated 2026-11-15) records:
