@@ -119,7 +119,7 @@ The existing GitHub Actions workflow successfully ran Mono.Cecil over all 143 Ma
 
 ## First-scene component inventory (2026-11-17)
 
-The partial Player Data archive was successfully inspected with UnityPy 1.25.4 after UnityDataTool's full analyzer skipped the files because their TypeTrees were stripped. All 132 MonoBehaviour script references in `level0` and `level1` resolved. `level0` contains an active, enabled `DiscordRPC` component on GameObject `Discord`, as well as active input-manager and gamepad-switcher components. This connects the managed IL finding for `DiscordCreate` to a component present in the title/menu-style scene. The serialized Discord configuration guard still needs to be decoded before calling it a confirmed startup failure. See [the scene component audit](SCENE_COMPONENT_AUDIT_2026-11-17.md).
+The partial Player Data archive was successfully inspected with UnityPy 1.25.4 after UnityDataTool's full analyzer skipped the files because their TypeTrees were stripped. All 132 MonoBehaviour script references in `level0` and `level1` resolved. `level0` contains an active, enabled `DiscordRPC` component on GameObject `Discord`, as well as active input-manager and gamepad-switcher components. This connects the managed IL finding for `DiscordCreate` to a component present in the title/menu-style scene. The serialized Discord component has now been decoded: its numeric application ID is non-empty and rich-presence updates are enabled. A focused IL dump is checking the exact branch; the missing native DLL finding is still limited to the supplied archive set. See [the scene component audit](SCENE_COMPONENT_AUDIT_2026-11-17.md).
 
 ## What this means for this Yandere Simulator snapshot
 
