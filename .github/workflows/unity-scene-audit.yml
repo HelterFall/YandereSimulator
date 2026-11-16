@@ -90,6 +90,38 @@ jobs:
           python tools/UnitySceneAudit/decode_discord_component.py \
             "$DATA_DIR" Managed.zip "$GITHUB_WORKSPACE/scene-audit-output/discord-component-config.json"
 
+      - name: Cross-check native plugin files across repository ZIP archives
+        shell: bash
+        run: |
+          set -u
+          mkdir -p scene-audit-output
+          REPORT="scene-audit-output/native-plugin-archive-check.txt"
+          : > "$REPORT"
+          for ARCHIVE in ./*.zip; do
+            [ -f "$ARCHIVE" ] || continue
+            echo "## $(basename "$ARCHIVE")" >> "$REPORT"
+            LIST="$RUNNER_TEMP/archive-list.txt"
+            ERR="$RUNNER_TEMP/archive-list.err"
+            if unzip -Z1 "$ARCHIVE" > "$LIST" 2> "$ERR"; then
+              MATCHES="$(grep -Ei '(^|/)(discord_game_sdk|discord-rpc|XInputInterface|Firefox|firefox|geckodriver|WebDriver)\.(dll|exe)        uses: actions/upload-artifact@v4
+        with:
+          name: unity-scene-script-inventory
+          path: scene-audit-output/
+          if-no-files-found: error
+          retention-days: 14
+ "$LIST" || true)"
+              if [ -n "$MATCHES" ]; then
+                printf '%s\n' "$MATCHES" >> "$REPORT"
+              else
+                echo "(no matching Discord/XInput/Firefox/WebDriver files)" >> "$REPORT"
+              fi
+            else
+              echo "UNREADABLE ZIP: $(tr '\n' ' ' < "$ERR")" >> "$REPORT"
+            fi
+            echo >> "$REPORT"
+          done
+          cat "$REPORT"
+
       - name: Upload scene inventory (no asset payloads)
         uses: actions/upload-artifact@v4
         with:
