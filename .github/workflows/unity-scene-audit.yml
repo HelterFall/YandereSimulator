@@ -103,20 +103,15 @@ jobs:
             LIST="$RUNNER_TEMP/archive-list.txt"
             ERR="$RUNNER_TEMP/archive-list.err"
             if unzip -Z1 "$ARCHIVE" > "$LIST" 2> "$ERR"; then
-              MATCHES="$(grep -Ei '(^|/)(discord_game_sdk|discord-rpc|XInputInterface|Firefox|firefox|geckodriver|WebDriver)\.(dll|exe)        uses: actions/upload-artifact@v4
-        with:
-          name: unity-scene-script-inventory
-          path: scene-audit-output/
-          if-no-files-found: error
-          retention-days: 14
- "$LIST" || true)"
+              MATCHES="$(grep -Ei '(discord_game_sdk|discord-rpc|XInputInterface|Firefox|firefox|geckodriver|WebDriver).(dll|exe)$' "$LIST" || true)"
               if [ -n "$MATCHES" ]; then
-                printf '%s\n' "$MATCHES" >> "$REPORT"
+                echo "$MATCHES" >> "$REPORT"
               else
                 echo "(no matching Discord/XInput/Firefox/WebDriver files)" >> "$REPORT"
               fi
             else
-              echo "UNREADABLE ZIP: $(tr '\n' ' ' < "$ERR")" >> "$REPORT"
+              echo "UNREADABLE ZIP" >> "$REPORT"
+              cat "$ERR" >> "$REPORT"
             fi
             echo >> "$REPORT"
           done
