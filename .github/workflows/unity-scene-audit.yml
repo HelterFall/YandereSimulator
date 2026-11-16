@@ -64,16 +64,19 @@ jobs:
             fi
           done
 
-      - name: Analyze available Player Data files (keep object references)
-        shell: bash
-        run: |
-          set -euo pipefail
-          "$UNITY_DATA_TOOL" analyze "$DATA_DIR" -o "$RUNNER_TEMP/yandere-player-data.db" --skip-crc -v
+      - name: Set up Python and install UnityPy
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Extract scene MonoBehaviour inventory
+      - name: Install pinned UnityPy parser
         run: |
-          python3 tools/UnitySceneAudit/extract_scene_scripts.py \
-            "$RUNNER_TEMP/yandere-player-data.db" "$GITHUB_WORKSPACE/scene-audit-output"
+          python -m pip install --disable-pip-version-check "UnityPy==1.25.4"
+
+      - name: Extract scene MonoBehaviour inventory without stripped custom TypeTrees
+        run: |
+          python tools/UnitySceneAudit/extract_scene_scripts_unitypy.py \
+            "$DATA_DIR" "$GITHUB_WORKSPACE/scene-audit-output"
 
       - name: Upload scene inventory (no asset payloads)
         uses: actions/upload-artifact@v4
