@@ -31,8 +31,9 @@ jobs:
           test -f Managed.zip
           mkdir -p managed-extract
           unzip -q Managed.zip -d managed-extract
-          MANAGED_DIR="$(find managed-extract -type f -name 'Assembly-CSharp.dll' -printf '%h\\n' | head -n 1)"
-          test -n "$MANAGED_DIR"
+          ASSEMBLY_PATH="$(find managed-extract -type f -name 'Assembly-CSharp.dll' -print -quit)"
+          test -n "$ASSEMBLY_PATH"
+          MANAGED_DIR="$(dirname "$ASSEMBLY_PATH")"
           echo "MANAGED_DIR=$MANAGED_DIR" >> "$GITHUB_ENV"
           echo "Found game assemblies in: $MANAGED_DIR"
 
