@@ -17,6 +17,8 @@ var featureRows = new List<string>();
 var errors = new List<string>();
 // Static inventory only: this tool does not infer startup reachability or execute game code.
 var parsed = 0;
+using var resolver = new DefaultAssemblyResolver();
+resolver.AddSearchDirectory(input);
 
 static IEnumerable<TypeDefinition> AllTypes(IEnumerable<TypeDefinition> types)
 {
@@ -43,7 +45,8 @@ foreach (var file in Directory.EnumerateFiles(input, "*.dll", SearchOption.AllDi
         {
             ReadingMode = ReadingMode.Immediate,
             InMemory = true,
-            ReadSymbols = false
+            ReadSymbols = false,
+            AssemblyResolver = resolver
         });
     }
     catch (Exception ex)
