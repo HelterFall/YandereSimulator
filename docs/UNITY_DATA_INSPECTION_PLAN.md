@@ -2,7 +2,7 @@
 
 **Дата:** 2026-11-17  
 **Основа:** God report `unity-game-analysis.json` из этого репозитория + официальная документация UnityDataTool + документация открытых библиотек.  
-**Статус:** план обновлён после успешного managed IL-аудита. UnityDataTool 2.4.0 scene-inventory workflow добавлен и запущен; результат ожидается. Unity version `6000.2.8f1` уже подтверждена строками внутри доступных SerializedFiles, но структурированная metadata-проверка ещё ожидается.
+**Статус:** UnityDataTool 2.4.0 подтвердил metadata (`6000.2.8f1`, target platform 19, SerializedFile v22), но его SQLite analyzer пропустил пять файлов из-за отсутствующих TypeTrees. Обходной UnityPy 1.25.4 сканер успешно извлёк 132 MonoBehaviour/MonoScript ссылки из `level0` и `level1`; см. [scene component audit](SCENE_COMPONENT_AUDIT_2026-11-17.md).
 
 ## 1. Unity version: подтверждена строками, metadata-проверка остаётся полезной
 
@@ -153,7 +153,7 @@ Cecil не запускает CIL и не реализует UnityEngine. Не �
 
 ## 8. Что пока не подтверждено
 
-- UnityDataTool workflow добавлен в `.github/workflows/unity-scene-audit.yml`; на момент этой редакции запуск ещё выполнялся.
+- UnityDataTool metadata и UnityPy scene inventory workflow завершились успешно. UnityDataTool analyze не может построить базу без TypeTrees; UnityPy fallback читает встроенный MonoBehaviour header и MonoScript refs.
 - Unity version `6000.2.8f1` подтверждена строками в четырёх SerializedFiles; структурированная metadata-проверка UnityDataTool ещё не получена.
 - Ни AssetsTools.NET, ни Mono.Cecil ещё не добавлены в RamenUnity.
 - Ни один managed runtime ещё не проверен на реальном ARM64 устройстве с игровыми DLL.
