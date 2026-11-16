@@ -112,7 +112,11 @@ The God report (generated 2026-11-15) records:
 - many Windows x86-64 plugins and imports, including Windows system libraries;
 - Unity version was not detected by the current heuristic (`unityVersion: null`).
 
-These observations do **not** prove Android compatibility. The report also warns that PE analysis was limited to the first 150 EXE/DLL files. A null Unity version is an inconclusive scan result, not proof that the version is absent.
+**Update from direct archive inspection (2026-11-17):** the supplied `YandereSimulator_Data.zip` contains `6000.2.8f1` in `globalgamemanagers`, `globalgamemanagers.assets`, `level0`, and `level1`. The version is therefore confirmed for this supplied snapshot; the earlier null was a scanner limitation. See [the archive audit](ARCHIVE_AUDIT_2026-11-17.md) for exact scope and integrity results.
+
+The archive audit also confirmed that the bundled Mono runtime DLLs and supplied native plug-ins are Windows x86-64 binaries, while the game assemblies are IL-only managed PE files. Unity's published Unity 6.0 scripting-backend support table lists Android Mono as ARMv7; ARM64 Android Player builds require IL2CPP. This does not rule out hosting a separate standalone ARM64 runtime, but it means RamenUnity cannot assume Unity's standard Mono Android player runtime is available for ARM64. Upstream Mono's platform table separately lists Android ARM support and an ARM64 interpreter entry; exact JIT/runtime/profile compatibility remains unproven.
+
+These observations do **not** prove Android compatibility. The report also warns that PE analysis was limited to the first 150 EXE/DLL files. The archive audit covers only the ZIPs actually available in the workspace; the full main-player archive was not present and one `StreamingAssets.zip` was unreadable.
 
 ### Reuse map
 
@@ -184,6 +188,9 @@ Before adopting a dependency, record:
 - Mono runtime overview: https://www.mono-project.com/docs/advanced/runtime/
 - Mono embedding: https://www.mono-project.com/docs/advanced/embedding/
 - Mono on Android: https://www.mono-project.com/docs/about-mono/supported-platforms/android/
+- Mono supported architectures: https://www.mono-project.com/docs/about-mono/supported-platforms/
+- Unity 6.0 scripting backend platform support: https://docs.unity.com/en-us/engine/6000.0/manual/programming-environment/scripting-backends/intro
+- Unity Android native plug-ins: https://docs.unity.com/en-us/engine/6000.7/manual/platform-specific/android/developing/plugins-for/plugin-types/native-plugins/introducing
 - UnityDataTool: https://github.com/Unity-Technologies/UnityDataTools
 - UnityDataTool SerializedFile docs: https://github.com/Unity-Technologies/UnityDataTools/blob/main/Documentation/command-serialized-file.md
 - AssetsTools.NET: https://github.com/nesrak1/AssetsTools.NET
