@@ -2,11 +2,11 @@
 
 **Дата:** 2026-11-17  
 **Основа:** God report `unity-game-analysis.json` из этого репозитория + официальная документация UnityDataTool + документация открытых библиотек.  
-**Статус:** план и техническая проверка источников; сами бинарные игровые файлы командами UnityDataTool здесь ещё не запускались.
+**Статус:** план обновлён после успешного managed IL-аудита. UnityDataTool 2.4.0 scene-inventory workflow добавлен и запущен; результат ожидается. Unity version `6000.2.8f1` уже подтверждена строками внутри доступных SerializedFiles, но структурированная metadata-проверка ещё ожидается.
 
-## 1. Самая полезная находка: UnityDataTool умеет извлекать версию Unity из metadata
+## 1. Unity version: подтверждена строками, metadata-проверка остаётся полезной
 
-В God-отчёте поле `unityVersion` равно `null`. Это не доказывает, что версия отсутствует: God сейчас ищет строку эвристически в ограниченном участке файла.
+В God-отчёте поле `unityVersion` равно `null`, но это ограничение эвристики God, а не отсутствие версии. Прямой аудит `YandereSimulator_Data.zip` обнаружил `6000.2.8f1` в `globalgamemanagers`, `globalgamemanagers.assets`, `level0` и `level1`. UnityDataTool metadata теперь нужна для независимой проверки `targetPlatform`, TypeTree и структуры SerializedFile, а не для повторного доказательства самой версии.
 
 В официальной документации UnityDataTool команда:
 
@@ -144,17 +144,17 @@ Cecil не запускает CIL и не реализует UnityEngine. Не �
 
 ## 7. Обновлённый приоритет работ
 
-1. **Подтвердить версию Unity через SerializedFile metadata** — наивысший приоритет.
-2. **Снять object list и external refs с level0** — маленький контрольный набор.
-3. **Сделать read-only отчёт Mono.Cecil по Assembly-CSharp.dll** — получить реальную карту Unity API и P/Invoke.
-4. **Выбрать Android managed runtime только после проверки профиля сборок**.
-5. **Проверить AssetsTools.NET как альтернативный парсер**.
-6. **Не писать свой SerializedFile parser, пока сравнение готовых библиотек не выявит конкретную недостающую возможность**.
+1. **Получить список MonoBehaviour для `level0` и `level1`** через UnityDataTool и определить, какие игровые компоненты реально присутствуют в первых сценах.
+2. **Проверить SerializedFile metadata**: Unity version, target platform, TypeTree и external references.
+3. **Сопоставить сценовые компоненты с managed IL call-site findings**: особенно Discord, XInput/rumble и YouTubeChat.
+4. **Расширить анализ на другие сцены и общие assets** только после оценки полноты текущего частичного Data-архива.
+5. **Выбрать Android managed runtime только после проверки профиля сборок**.
+6. **Не писать свой SerializedFile parser, пока готовые инструменты не выявят конкретную недостающую возможность**.
 
 ## 8. Что пока не подтверждено
 
-- UnityDataTool не запускался на игровых файлах в рамках этого исследования.
-- Unity version конкретной сборки всё ещё не подтверждена: God вернул `null`, а документация инструмента лишь описывает способ проверки.
+- UnityDataTool workflow добавлен в `.github/workflows/unity-scene-audit.yml`; на момент этой редакции запуск ещё выполнялся.
+- Unity version `6000.2.8f1` подтверждена строками в четырёх SerializedFiles; структурированная metadata-проверка UnityDataTool ещё не получена.
 - Ни AssetsTools.NET, ни Mono.Cecil ещё не добавлены в RamenUnity.
 - Ни один managed runtime ещё не проверен на реальном ARM64 устройстве с игровыми DLL.
 - Наличие Mono DLL в папке игры не доказывает, что именно эти Windows-библиотеки пригодны для Android.
