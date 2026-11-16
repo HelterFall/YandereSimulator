@@ -117,6 +117,10 @@ The metadata-only audit is not enough to decide whether optional native integrat
 
 The existing GitHub Actions workflow successfully ran Mono.Cecil over all 143 Managed.zip DLLs. It decoded 175,137 call-like instructions from the two game assemblies and XInputDotNetPure, with zero DLL parse errors. The scan identified game-owned XInput vibration/state calls, two Discord integration paths, and Selenium/WebDriver use concentrated in YouTubeChat. Full curated findings and the unresolved scene-membership questions are documented in [Feature call-site findings](FEATURE_CALLSITE_FINDINGS_2026-11-17.md). This remains static analysis, not a runtime trace or proof of first-scene reachability.
 
+## First-scene component inventory (2026-11-17)
+
+The partial Player Data archive was successfully inspected with UnityPy 1.25.4 after UnityDataTool's full analyzer skipped the files because their TypeTrees were stripped. All 132 MonoBehaviour script references in `level0` and `level1` resolved. `level0` contains an active, enabled `DiscordRPC` component on GameObject `Discord`, as well as active input-manager and gamepad-switcher components. This connects the managed IL finding for `DiscordCreate` to a component present in the title/menu-style scene. The serialized Discord configuration guard still needs to be decoded before calling it a confirmed startup failure. See [the scene component audit](SCENE_COMPONENT_AUDIT_2026-11-17.md).
+
 ## What this means for this Yandere Simulator snapshot
 
 The God report (generated 2026-11-15) records:
