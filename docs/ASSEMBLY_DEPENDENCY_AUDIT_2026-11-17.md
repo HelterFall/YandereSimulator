@@ -68,7 +68,7 @@ The second missing library may be relevant if the corresponding Discord SDK path
 
 ## P/Invoke inventory across all 143 managed DLLs
 
-The metadata parser found P/Invoke declarations in these 14 assemblies:
+The metadata parser found **1,358 P/Invoke declarations across 13 assemblies** in the 143-DLL Managed.zip:
 
 | Managed DLL | P/Invoke declarations | Referenced native module names |
 |---|---:|---|
