@@ -50,7 +50,7 @@ This is stronger evidence than the earlier managed-reference-only result:
 - The `Discord.Discord` constructor calls the imported `DiscordCreate` method from `discord_game_sdk`.
 - The earlier archive cross-check did not find `discord_game_sdk.dll` in the supplied ZIP set.
 
-**Serialized component configuration was subsequently decoded.** The active component has a non-empty numeric `_applicationID`, `_updateRichPresence = 1`, and `_updateRate = 10.0`. Its GameObject is active and the component is enabled. The managed IL inventory shows `DiscordRPC.Start()` performs a string inequality check, parses a 64-bit application ID, then constructs `Discord.Discord`; the constructor reaches the imported `DiscordCreate` entry point. Together these observations make the Game SDK path a **high-confidence first-scene compatibility risk**, not merely a dormant assembly reference. A focused IL dump is being used to verify the exact conditional operand. The missing `discord_game_sdk.dll` finding remains limited to the supplied archive set, so the complete original player package could still contain it elsewhere.
+**Serialized component configuration was subsequently decoded.** The active component has a non-empty numeric `_applicationID`, `_updateRichPresence = 1`, and `_updateRate = 10.0`. Its GameObject is active and the component is enabled. The managed IL inventory shows `DiscordRPC.Start()` performs a string inequality check, parses a 64-bit application ID, then constructs `Discord.Discord`; the constructor reaches the imported `DiscordCreate` entry point. Together these observations make the Game SDK path a **high-confidence first-scene compatibility risk**, not merely a dormant assembly reference. The focused IL dump now confirms the exact branch: `DiscordRPC.Start()` loads `_applicationID`, compares it with `String.Empty`, and on the non-empty branch parses the ID, constructs `Discord.Discord`, and calls `UpdateActivity()`. The decoded scene value is non-empty, so this branch is taken. The `Discord.Discord` constructor then calls `DiscordCreate` (IL offset `0x0312`) from the `discord_game_sdk` P/Invoke. The active, enabled scene component therefore reaches this native boundary on its normal `Start()` path, barring an already-existing singleton instance. The missing `discord_game_sdk.dll` finding remains limited to the supplied archive set, so the complete original player package could still contain it elsewhere.
 
 The older `DiscordController` / `DiscordRpc` P/Invoke path and `RichPresenceHelper` are not listed as components in `level0` or `level1`. Do not conflate those legacy wrappers with the active `DiscordRPC` Game SDK component.
 
@@ -100,9 +100,9 @@ The workflow and scanner do not modify game files. The generated artifact contai
 
 ## Next steps
 
-1. Finish validating the exact `DiscordRPC.Start()` branch operand against the decoded non-empty application ID and enabled rich-presence flag.
-2. Check whether the complete original game package contains `discord_game_sdk.dll`; the current archive set is incomplete.
-3. Plan an explicit Android compatibility response for Discord Game SDK (e.g. optional unsupported feature with a clean no-op path); do not silently claim Discord support.
+1. Check whether the complete original game package contains `discord_game_sdk.dll`; the current archive set is incomplete.
+2. Treat Discord Game SDK as a first-scene native dependency in the compatibility plan. RamenUnity must either provide a real Android-compatible implementation or explicitly skip/disable this optional integration without claiming Discord support.
+3. Preserve a test that loads level0 with the Discord component present and verifies the unsupported path does not prevent the title scene from initializing.
 4. Implement/test the Unity Input System calls used by the active `GamepadSwitcherScript`, `InputManagerScript` and `InputDeviceScript`.
 5. Obtain a complete Player Data archive before concluding that later scenes do not contain additional dependencies.
 6. Revisit XInput and Selenium when later scene inventories are available.
