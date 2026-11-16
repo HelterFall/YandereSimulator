@@ -15,6 +15,7 @@ Directory.CreateDirectory(output);
 var allRows = new List<string>();
 var featureRows = new List<string>();
 var errors = new List<string>();
+// Static inventory only: this tool does not infer startup reachability or execute game code.
 var parsed = 0;
 
 static IEnumerable<TypeDefinition> AllTypes(IEnumerable<TypeDefinition> types)
