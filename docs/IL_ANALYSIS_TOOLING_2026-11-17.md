@@ -94,16 +94,17 @@ The workflow extracts `Managed.zip` on a GitHub-hosted runner, runs the scanner 
 
 Execution status at the time of this update:
 
-- Run `43979007593` failed because the shell path-discovery command accidentally appended a literal newline escape to the extracted directory name. The ZIP download, extraction and DLL discovery steps succeeded.
+- Run `43979007593` failed because the shell path-discovery command appended a literal newline escape to the extracted directory name. ZIP download, extraction and DLL discovery had succeeded.
 - The workflow path handling was corrected to use `find -print -quit` plus `dirname`.
-- Corrected run `43979084371` has started; its extraction step completed and the scanner step is still running. A successful report is **not yet confirmed**.
-- The initial run exposed an environment/automation issue, not a game compatibility result. No conclusions about the game's call paths should be drawn until the report artifact exists and has been inspected.
+- Corrected-path run `43979084371` completed and uploaded an artifact, but the first scanner version parsed only 94/143 DLLs and reported 49 assembly-resolution errors. It recorded 10,164 call-like instructions, all from `Assembly-CSharp-firstpass.dll` (10,134) and `XInputDotNetPure.dll` (30); it did **not** include `Assembly-CSharp.dll`. That artifact is diagnostic only and cannot answer the game-code call-path question.
+- The report showed that Mono.Cecil was not resolving sibling assemblies from the extracted Managed directory. A `DefaultAssemblyResolver` with the Managed directory added as a search path was added in commit `20cf30215fa683e45ad9b906e955df5df4c16231`.
+- Follow-up run `43979217454` is executing with that resolver. Its extraction step completed; the CIL scan step is still running. The corrected main-assembly scan and its results are **not yet confirmed**.
 
 ## Remaining limits
 
-The previous metadata parser and uploaded ZIPs were available in the earlier analysis workspace, but they are not present in the current execution workspace. The repository contains the audit report and archive inventory; the binary ZIP contents cannot be treated as freshly re-read in this step. Therefore **no new IL body scan, decompilation, call-site list or startup call graph is claimed here**.
+The scanner inventories call-like instructions; it does not prove that a call is reachable during startup or executed at runtime. Reflection, delegates, native callbacks and conditional paths can still hide dependencies. The initial artifact must not be used as evidence about `Assembly-CSharp.dll` because that assembly was absent from the scan.
 
-The immediate practical next action is to restore access to the existing `Managed.zip` binary in an analysis environment, then test ILSpy or Mono.Cecil against the two game assemblies. No re-upload should be requested unless the existing repository copy cannot be retrieved by a suitable binary-capable workflow.
+The binary archive was successfully read by GitHub Actions, so a re-upload is not needed for this route. The next step is to inspect the corrected run's report artifact, verify that `Assembly-CSharp.dll` appears in the caller list, then analyze the filtered call sites and trace candidate startup methods.
 
 ## Sources
 
