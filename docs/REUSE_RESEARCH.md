@@ -113,6 +113,10 @@ Full tables and limitations: [Managed assembly dependency audit](ASSEMBLY_DEPEND
 
 The metadata-only audit is not enough to decide whether optional native integrations are reached during startup. The next step is to inspect CIL method bodies and call sites. The current tooling comparison and reproducible workflow are recorded in [IL method-body analysis tooling](IL_ANALYSIS_TOOLING_2026-11-17.md). This is a research plan only; no method-body scan or call graph has yet been run.
 
+## IL call-site scan results (2026-11-17)
+
+The existing GitHub Actions workflow successfully ran Mono.Cecil over all 143 Managed.zip DLLs. It decoded 175,137 call-like instructions from the two game assemblies and XInputDotNetPure, with zero DLL parse errors. The scan identified game-owned XInput vibration/state calls, two Discord integration paths, and Selenium/WebDriver use concentrated in YouTubeChat. Full curated findings and the unresolved scene-membership questions are documented in [Feature call-site findings](FEATURE_CALLSITE_FINDINGS_2026-11-17.md). This remains static analysis, not a runtime trace or proof of first-scene reachability.
+
 ## What this means for this Yandere Simulator snapshot
 
 The God report (generated 2026-11-15) records:
