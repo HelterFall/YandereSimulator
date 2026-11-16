@@ -15,6 +15,7 @@ Directory.CreateDirectory(output);
 var allRows = new List<string>();
 var featureRows = new List<string>();
 var errors = new List<string>();
+var discordStartIl = new List<string>();
 // Static inventory only: this tool does not infer startup reachability or execute game code.
 var parsed = 0;
 using var resolver = new DefaultAssemblyResolver();
@@ -67,6 +68,31 @@ foreach (var file in Directory.EnumerateFiles(input, "*.dll", SearchOption.AllDi
         foreach (var type in AllTypes(asm.MainModule.Types))
         foreach (var method in type.Methods)
         {
+            if (assemblyName == "Assembly-CSharp" &&
+                type.FullName == "DiscordRPC" &&
+                method.Name == "Start" &&
+                method.HasBody)
+            {
+                discordStartIl.Add($"Method: {method.FullName}");
+                foreach (var instruction in method.Body.Instructions)
+                {
+                    var operandText = instruction.Operand switch
+                    {
+                        null => "",
+                        string s => $"\\"{s}\\"",
+                        MethodReference mr => mr.FullName,
+                        FieldReference fr => fr.FullName,
+                        Instruction targetInstruction => $"IL_{targetInstruction.Offset:X4}",
+                        Instruction[] targets => string.Join(", ", targets.Select(t => $"IL_{t.Offset:X4}")),
+                        ParameterDefinition parameter => parameter.Name,
+                        VariableDefinition variable => $"V_{variable.Index}",
+                        _ => instruction.Operand.ToString() ?? ""
+                    };
+                    discordStartIl.Add($"IL_{instruction.Offset:X4}: {instruction.OpCode.Name} {operandText}".TrimEnd());
+                }
+                discordStartIl.Add("");
+            }
+
             if (!method.HasBody) continue;
             foreach (var ins in method.Body.Instructions)
             {
@@ -104,6 +130,7 @@ foreach (var file in Directory.EnumerateFiles(input, "*.dll", SearchOption.AllDi
 
 File.WriteAllLines(Path.Combine(output, "game_callsites.csv"), allRows, new UTF8Encoding(false));
 File.WriteAllLines(Path.Combine(output, "feature_callsites.csv"), featureRows, new UTF8Encoding(false));
+File.WriteAllLines(Path.Combine(output, "discord_start_il.txt"), discordStartIl, new UTF8Encoding(false));
 
 var summary = new StringBuilder()
     .AppendLine("# Managed CIL call-site scan")
